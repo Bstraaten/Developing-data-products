@@ -1,0 +1,58 @@
+---
+title: 'Assignment week 2: R Markdown and Leaflet'
+author: "B vStraaten"
+date: "March 13, 2018"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+This is my submission for the Assignment of week 2 of the developing data products course. If you'd like to reproduce this maps, make sure to install the following packages.
+
+```{r packages, message = FALSE}
+library(leaflet)
+library(dplyr)
+library(readr)
+library(randomcoloR)
+```
+
+## Data
+I got some data on countries, cities and population and filtered it to only include Germany. See references for credits.
+
+```{r data, message = FALSE}
+URL <- "https://simplemaps.com/static/data/world-cities/basic/simplemaps-worldcities-basic.csv"
+data <- read_csv(URL)
+data <- filter(data, country == "Germany")
+```
+
+(I had to fiddle around a bit to make the colors work since the usual colorbrewer palettes do not have not colors for my factor. This little bit makes the leaflet code easier.)
+
+```{r color}
+province <- unique(data$province) # get unique provinces
+n <- length(province) # get number of provinces
+palette <- distinctColorPalette(n) # get colors for each province
+dfcol <- data.frame(province, palette) # create df with color and province
+data <- merge(data, dfcol, by = "province") # merge dfcol and data2
+```
+
+## Map
+The map shows germany and it's s cities. The size of the circles show the population. The color shows the province. Click on the marker so see the population.
+
+```{r map, message = FALSE}
+my_map <- data %>%
+        leaflet(width = "100%") %>%
+        addTiles() %>%
+        addMarkers(popup = as.character(data$pop)) %>%
+        addCircles(weight = 1, radius = sqrt(data$pop)*50, color = data$palette) %>%
+        addLegend(labels = unique(data$province), colors = unique(data$palette))
+my_map
+```
+
+
+## References
+
+* https://simplemaps.com/data/world-cities
+* https://stackoverflow.com/questions/15282580/how-to-generate-a-number-of-most-distinctive-colors-in-r
